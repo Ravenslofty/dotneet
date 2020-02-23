@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="cpu.fs" />
+    <Compile Include="v30.fs" />
   </ItemGroup>
 
 </Project>
