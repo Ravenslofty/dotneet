@@ -4,13 +4,13 @@ module V30
 (* Wrapper type around a V30 general-purpose register to avoid out-of-bounds access *)
 type Register =
     { reg: int }
-
+    
 (* Create a Register from an integer *)
-let registerOfInt idx =
+let registerByIndex idx =
     if idx >= 0 && idx <= 7 then Some({ reg = idx }) else None
 
 (* Return the encapsulated integer of a Register *)
-let intOfRegister reg = reg.reg
+let registerValue reg = reg.reg
 
 (* Register constants for ease of debugging and testing *)
 (* Accumulator Register *)
@@ -36,11 +36,11 @@ type Segment =
     { seg: int }
 
 (* Create a Segment from an integer *)
-let segmentOfInt idx =
+let segmentByIndex idx =
     if idx >= 0 && idx <= 3 then Some({ seg = idx }) else None
 
 (* Return the encapsulated integer of a Segment *)
-let intOfSegment seg = seg.seg
+let segmentValue seg = seg.seg
 
 (* Segment constants for ease of debugging and testing *)
 (* Code Segment *)
@@ -88,13 +88,13 @@ type CPURegisters =
       flags: Flags }
 
 (* Return a general-purpose register *)
-let getRegister cpu gpr = cpu.reg.[intOfRegister gpr]
+let getRegister cpu gpr = cpu.reg.[registerValue gpr]
 
 (* Return the CPU instruction pointer *)
 let getInstructionPointer cpu = cpu.ip
 
 (* Return a segment register *)
-let getSegment cpu seg = cpu.seg.[intOfSegment seg]
+let getSegment cpu seg = cpu.seg.[segmentValue seg]
 
 (* Return the CPU status word *)
 let getFlags cpu = cpu.flags
