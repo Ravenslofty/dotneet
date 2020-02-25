@@ -66,4 +66,5 @@ let writeRegister reg (value: uint16) =
     | IP -> ()
     | Flags -> ()
 
-
+let readMemory offset = Memory.readShort (int (readRegister ES) <<< 4 + offset)
+let writeMemory offset value = Memory.writeByte
