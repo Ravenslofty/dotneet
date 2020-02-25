@@ -6,6 +6,8 @@
 
   <ItemGroup>
     <Compile Include="Memory\Memory.fs" />
+    <Compile Include="CPU\CpuInstruction.fs" />
+    <Compile Include="CPU\Cpu8086.fs" />
     <Compile Include="CPU\V30.fs" />
   </ItemGroup>
 

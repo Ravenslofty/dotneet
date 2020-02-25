@@ -1,18 +1,17 @@
 ﻿(* 384kb 32-bit RAM *)
 module Memory
 
-let busWidth = 16
-let ramSize = 384 * 1024 * busWidth / 8
-let wordSize = busWidth / 8
+let ramSize = 384 * 1024
 
-let data = Array.create ramSize 0uy
-let zero = System.Array.Fill(data, 0uy)
+let data = Array.create ramSize 0us
+let fill = Array.fill data
+let zero = fill 0 data.Length 0us
 
-let readShift addr bits = uint32 data.[addr] <<< bits
-
-let readByte addr = data.[addr]
-let readShort addr = readShift (addr + 1) 8 ||| uint32 (readByte addr)
+let readByte addr = uint32 (byte data.[addr])
+let readShort addr = readByte (addr + 1) <<< 8 ||| readByte addr
 let readInt addr = readShort (addr + 2) <<< 16 ||| readShort addr
 
-let writeByte addr (value: byte) = data.[addr] <- value
-let writeBytes addr (values: byte[]) = System.Array.Copy(values, 0, data, addr, values.Length)
+let writeByte addr (value: byte) = data.[addr] <- uint16 value
+let writeShort addr (value: uint16) = data.[addr] <- value &&& 0xFFus; data.[addr + 1] <- value >>> 8
+let writeInt addr (value: uint32) = writeShort addr (uint16 (value &&& 0xFFFFu)); writeShort (addr + 2) (uint16 (value >>> 16))
+
