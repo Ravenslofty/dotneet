@@ -80,14 +80,28 @@ let writeIp value = registerData.[12] <- value
 
 let readFlag (flag: CpuFlag) = registerData.[13] &&& uint16 flag
 let writeFlag (flag: CpuFlag) = registerData.[13] <- registerData.[13] ||| uint16 flag
+
+let readFlags = registerData.[13]
 let writeFlags value = registerData.[13] <- value
+
 let flagIsSet (flag: CpuFlag) = readFlag flag > 0us
 
 // Check to see if we need to cache the left-shift operation, since we switch segments less than we access memory
 let readMemory offset = Memory.readShort (int (readSegment ES) <<< 4 + offset)
 let writeMemory offset value = Memory.writeShort (int (readSegment ES) <<< 4 + offset) value
 
-let reset =
-    Array.fill registerData 0 registerData.Length 0us
+let resetCpu =
+    System.Array.Clear(registerData, 0, 0)
     writeSegment CS 0xFFFFus
     writeFlags 0xF002us
+    
+let runCpu =
+    let mutable running = false
+    let segmentOverride = ()
+    let repeatPrefix = ()
+    // Design halting mechanism
+    while running do
+        // Get OpCode, parameters
+        // Execute on that opcode
+        ()
+    ()
