@@ -3,13 +3,27 @@
 type OperatingMode = Real | Protected
 
 type Register =
-    | AH | AL | AX         // General purpose Registers
-    | BH | BL | BX
-    | CH | CL | CX
-    | DH | DL | DX
-    | SI | DI | SP | BP    // Index Registers (Source, Destination, Stack, Base)
+    | AX                    // General purpose registers
+    | BX
+    | CX
+    | DX
+
+type Index =
+    | SI                   // Index Registers (Source, Destination, Stack, Base)
+    | DI
+    | SP
+    | BP
+
+type Segment =
     | CS | DS | SS | ES    // Segment Registers (Code, Data, Stack, Extra)
+
+type SpecialRegister = 
     | IP | Flags           // Program Counter and Status Register
+
+type RegisterSize =
+    | High
+    | Low
+    | Word
 
 type CpuFlag =
     | Carry     = 0x0001us // The last operation resulted in unsigned overflow
@@ -27,21 +41,24 @@ let highByte (s: uint16) = byte (s >>> 8)
 
 let registerData = Array.create 14 0us
 
-let readRegister reg =
-    match reg with
-    | AX -> registerData.[0]
-    | AH -> highByte registerData.[0] |> uint16
-    | AL -> lowByte registerData.[0] |> uint16
-    | BX -> registerData.[1]
-    | BH -> highByte registerData.[1] |> uint16
-    | BL -> lowByte registerData.[1] |> uint16
-    | CX -> registerData.[2]
-    | CH -> highByte registerData.[2] |> uint16
-    | CL -> lowByte registerData.[2] |> uint16
-    | DX -> registerData.[3]
-    | DH -> highByte registerData.[3] |> uint16
-    | DL -> lowByte registerData.[3] |> uint16
-    | _ -> failwith "Invalid register specified"
+let registerIndex = function
+    | AX -> 0
+    | BX -> 1
+    | CX -> 2
+    | DX -> 3
+
+let segmentIndex = function
+    | 
+
+let readRegister reg size =
+    let reg = registerData.[registerIndex reg]
+
+    let get = match size with
+    | Low -> (fun x -> lowByte x |> uint16)
+    | High -> (fun x -> highByte x |> uint16)
+    | Word -> (fun x -> x)
+
+    get reg
 
 let writeRegister reg (value: uint16) =
     match reg with
@@ -58,6 +75,7 @@ let writeRegister reg (value: uint16) =
     | DH -> registerData.[3] <- (value <<< 8) ||| (registerData.[3] &&& 0x00FFus)
     | DL -> registerData.[3] <- (value &&& 0x00FFus) ||| (registerData.[3] &&& 0xFF00us)
     | _ -> failwith "Invalid register specified"
+
 
 let readSegment seg = 
     match seg with
