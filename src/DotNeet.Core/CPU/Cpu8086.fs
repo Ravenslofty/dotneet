@@ -1,6 +1,7 @@
 ﻿module Cpu8086
 
-type OperatingMode = Real | Protected
+type OperatingMode = 
+    Real | Protected
 
 type Register =
     | AX | BX | CX | DX    // General purpose registers
@@ -28,6 +29,9 @@ type CpuFlag =
     | Direction = 0x0400us // The CPU will execute string operations from high addresses to low addresses instead of low to high
     | Overflow  = 0x0800us // The last operation resulted in signed overflow
 
+type Cpu8086 =
+    { registers: uint16 array; segments: uint16 array; instructionPointer: uint16; flags: uint16 }
+
 let lowByte (s: uint16) = byte s
 let highByte (s: uint16) = byte (s >>> 8)
 
@@ -52,13 +56,13 @@ let readRegister reg size =
     let reg = registerData.[registerIndex reg]
 
     let get = match size with
-    | Low -> (fun x -> lowByte x |> uint16)
-    | High -> (fun x -> highByte x |> uint16)
-    | Word -> (fun x -> x)
+    | Low -> lowByte >> uint16
+    | High -> highByte >> uint16
+    | Word -> id
 
     get reg
 
-let writeRegister reg size (value: uint16) =
+let writeRegister reg size value =
     let oldValue = registerData.[registerIndex reg]
 
     let newValue = match size with
@@ -112,3 +116,4 @@ let runCpu () =
         // Execute on that opcode
         ()
     ()
+    

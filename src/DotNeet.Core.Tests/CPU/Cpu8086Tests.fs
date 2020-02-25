@@ -46,3 +46,32 @@ type Cpu8086Tests () =
         for seg in segments do
             writeSegment seg testValue
             Assert.That(readSegment seg, Is.EqualTo(testValue));
+
+    [<Test>]
+    member this.CanReadAndWriteInstructionPointer() =
+       writeIp 0xABCDus
+       Assert.That(readIp (), Is.EqualTo(0xABCDus))
+
+    [<Test>]
+    member this.CanReadAndWriteFlagRegister() =
+        writeFlags 0xABCDus
+        Assert.That(readFlags (), Is.EqualTo(0xABCDus))
+
+    [<Test>]
+    member this.CanReadAndWriteFlags() =
+        let initialValue = 0xF002us
+
+        writeFlag CpuFlag.Carry
+        Assert.That(readFlags (), Is.EqualTo(0x0001us ||| initialValue))
+
+        writeFlag CpuFlag.Adjust
+        Assert.That(readFlags (), Is.EqualTo(0x0011us ||| initialValue))
+
+        writeFlag CpuFlag.Trap
+        Assert.That(readFlags (), Is.EqualTo(0x0111us ||| initialValue))
+
+        writeFlag CpuFlag.Interrupt
+        Assert.That(readFlags (), Is.EqualTo(0x0311us ||| initialValue))
+
+        writeFlag CpuFlag.Overflow
+        Assert.That(readFlags (), Is.EqualTo(0x0B11us ||| initialValue))
