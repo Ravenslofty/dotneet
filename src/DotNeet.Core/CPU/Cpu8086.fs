@@ -3,17 +3,11 @@
 type OperatingMode = Real | Protected
 
 type Register =
-    | AX                    // General purpose registers
-    | BX
-    | CX
-    | DX
+    | AX | BX | CX | DX    // General purpose registers
 
 type Index =
-    | SI                   // Index Registers (Source, Destination, Stack, Base)
-    | DI
-    | SP
-    | BP
-
+    | SI | DI | SP | BP    // Index Registers (Source, Destination, Stack, Base)
+    
 type Segment =
     | CS | DS | SS | ES    // Segment Registers (Code, Data, Stack, Extra)
 
@@ -21,9 +15,7 @@ type SpecialRegister =
     | IP | Flags           // Program Counter and Status Register
 
 type RegisterSize =
-    | High
-    | Low
-    | Word
+    | High | Low | Word    // The part of the register to manipulate during read/write
 
 type CpuFlag =
     | Carry     = 0x0001us // The last operation resulted in unsigned overflow
@@ -48,7 +40,13 @@ let registerIndex = function
     | DX -> 3
 
 let segmentIndex = function
-    | 
+    | CS -> 8
+    | DS -> 9
+    | SS -> 10
+    | ES -> 11
+
+let ipIndex = 12
+let flagsIndex = 13
 
 let readRegister reg size =
     let reg = registerData.[registerIndex reg]
@@ -60,47 +58,38 @@ let readRegister reg size =
 
     get reg
 
-let writeRegister reg (value: uint16) =
-    match reg with
-    | AX -> registerData.[0] <- value
-    | AH -> registerData.[0] <- (value <<< 8) ||| (registerData.[0] &&& 0x00FFus)
-    | AL -> registerData.[0] <- (value &&& 0x00FFus) ||| (registerData.[0] &&& 0xFF00us)
-    | BX -> registerData.[1] <- value
-    | BH -> registerData.[1] <- (value <<< 8) ||| (registerData.[1] &&& 0x00FFus)
-    | BL -> registerData.[1] <- (value &&& 0x00FFus) ||| (registerData.[1] &&& 0xFF00us)
-    | CX -> registerData.[2] <- value
-    | CH -> registerData.[2] <- (value <<< 8) ||| (registerData.[2] &&& 0x00FFus)
-    | CL -> registerData.[2] <- (value &&& 0x00FFus) ||| (registerData.[2] &&& 0xFF00us)
-    | DX -> registerData.[3] <- value
-    | DH -> registerData.[3] <- (value <<< 8) ||| (registerData.[3] &&& 0x00FFus)
-    | DL -> registerData.[3] <- (value &&& 0x00FFus) ||| (registerData.[3] &&& 0xFF00us)
-    | _ -> failwith "Invalid register specified"
+let writeRegister reg size (value: uint16) =
+    let oldValue = registerData.[registerIndex reg]
 
+    let newValue = match size with
+    | Low ->  (value &&& 0x00FFus) ||| (oldValue &&& 0xFF00us)
+    | High -> (value <<< 8) ||| (oldValue &&& 0x00FFus)
+    | Word -> value
+
+    registerData.[registerIndex reg] <- newValue
 
 let readSegment seg = 
     match seg with
-    | CS -> registerData.[8]
-    | DS -> registerData.[9]
-    | SS -> registerData.[10]
-    | ES -> registerData.[11]
-    | _ -> failwith "Invalid segment specified"
+    | CS -> registerData.[segmentIndex CS]
+    | DS -> registerData.[segmentIndex DS]
+    | SS -> registerData.[segmentIndex SS]
+    | ES -> registerData.[segmentIndex ES]
 
 let writeSegment seg (value: uint16) =
     match seg with
-    | CS -> registerData.[8] <- value
-    | DS -> registerData.[9] <- value
-    | SS -> registerData.[10] <- value
-    | ES -> registerData.[11] <- value
-    | _ -> failwith "Invalid segment specified"
+    | CS -> registerData.[segmentIndex CS] <- value
+    | DS -> registerData.[segmentIndex DS] <- value
+    | SS -> registerData.[segmentIndex SS] <- value
+    | ES -> registerData.[segmentIndex ES] <- value
 
-let readIp = registerData.[12]
-let writeIp value = registerData.[12] <- value
+let readIp () = registerData.[ipIndex]
+let writeIp value = registerData.[ipIndex] <- value
 
-let readFlag (flag: CpuFlag) = registerData.[13] &&& uint16 flag
-let writeFlag (flag: CpuFlag) = registerData.[13] <- registerData.[13] ||| uint16 flag
+let readFlag (flag: CpuFlag) = registerData.[flagsIndex] &&& uint16 flag
+let writeFlag (flag: CpuFlag) = registerData.[flagsIndex] <- registerData.[flagsIndex] ||| uint16 flag
 
-let readFlags = registerData.[13]
-let writeFlags value = registerData.[13] <- value
+let readFlags () = registerData.[flagsIndex]
+let writeFlags value = registerData.[flagsIndex] <- value
 
 let flagIsSet (flag: CpuFlag) = readFlag flag > 0us
 
@@ -108,13 +97,13 @@ let flagIsSet (flag: CpuFlag) = readFlag flag > 0us
 let readMemory offset = Memory.readShort (int (readSegment ES) <<< 4 + offset)
 let writeMemory offset value = Memory.writeShort (int (readSegment ES) <<< 4 + offset) value
 
-let resetCpu =
-    System.Array.Clear(registerData, 0, 0)
+let resetCpu () =
+    System.Array.Clear(registerData, 0, registerData.Length)
     writeSegment CS 0xFFFFus
     writeFlags 0xF002us
     
-let runCpu =
-    let mutable running = false
+let runCpu () =
+    let mutable running = true
     let segmentOverride = ()
     let repeatPrefix = ()
     // Design halting mechanism
