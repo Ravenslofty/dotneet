@@ -5,6 +5,7 @@ let ramSize = 384 * 1024
 
 let data = Array.create ramSize 0us
 let zero = System.Array.Fill(data, 0us)
+let fill start length value = System.Array.Fill(data, value, start, length)
 
 let readByte addr = uint32 (byte data.[addr])
 let readShort addr = readByte (addr + 1) <<< 8 ||| readByte addr

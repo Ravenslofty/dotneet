@@ -30,16 +30,7 @@ let readRegister reg =
     | DX -> registerData.[3]
     | DH -> highByte registerData.[3] |> uint16
     | DL -> lowByte registerData.[3] |> uint16
-    | SI -> 0us
-    | DI -> 0us
-    | SP -> 0us
-    | BP -> 0us
-    | CS -> 0us
-    | DS -> 0us
-    | SS -> 0us
-    | ES -> 0us
-    | IP -> 0us
-    | Flags -> 0us
+    | _ -> failwith "Invalid register specified"
 
 let writeRegister reg (value: uint16) =
     match reg with
@@ -55,16 +46,24 @@ let writeRegister reg (value: uint16) =
     | DX -> registerData.[3] <- value
     | DH -> registerData.[3] <- (value <<< 8) ||| (registerData.[3] &&& 0x00FFus)
     | DL -> registerData.[3] <- (value &&& 0x00FFus) ||| (registerData.[3] &&& 0xFF00us)
-    | SI -> ()
-    | DI -> ()
-    | SP -> ()
-    | BP -> ()
-    | CS -> ()
-    | DS -> ()
-    | SS -> ()
-    | ES -> ()
-    | IP -> ()
-    | Flags -> ()
+    | _ -> failwith "Invalid register specified"
 
-let readMemory offset = Memory.readShort (int (readRegister ES) <<< 4 + offset)
-let writeMemory offset value = Memory.writeByte
+let readSegment seg = 
+    match seg with
+    | CS -> registerData.[8]
+    | DS -> registerData.[9]
+    | SS -> registerData.[10]
+    | ES -> registerData.[11]
+    | _ -> failwith "Invalid segment specified"
+
+let writeSegment seg (value: uint16) =
+    match seg with
+    | CS -> registerData.[8] <- value
+    | DS -> registerData.[9] <- value
+    | SS -> registerData.[10] <- value
+    | ES -> registerData.[11] <- value
+    | _ -> failwith "Invalid segment specified"
+
+// Check to see if we need to cache the left-shift operation, since we switch segments less than we access memory
+let readMemory offset = Memory.readShort (int (readSegment ES) <<< 4 + offset)
+let writeMemory offset value = Memory.writeShort (int (readSegment ES) <<< 4 + offset) value
